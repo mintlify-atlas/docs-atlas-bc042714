@@ -1,0 +1,118 @@
+---
+title: "How to download and install Rectify11 on Windows 11"
+description: "Step-by-step guide to downloading and installing Rectify11 using the graphical installer wizard, from component selection through to the required restart."
+---
+
+Rectify11 uses a graphical wizard that walks you through every choice before making any changes to your system. The steps below match each page of the installer in order.
+
+<Warning>
+  Some antivirus products flag Rectify11's system-file patching as suspicious and may quarantine `ThemeTool.exe` or other components mid-installation, causing themes to fail. Before you start, add `C:\Windows\Rectify11` as an exclusion in your antivirus software. See [system requirements](/system-requirements) for details.
+</Warning>
+
+<Note>
+  The installer creates a **system restore point** before making any changes. If something goes wrong you can roll back through **System Properties > System Protection > System Restore**.
+</Note>
+
+<Steps>
+  <Step title="Download the installer">
+    Go to the [Releases page](https://github.com/Rectify11/Installer/releases) on GitHub and download the latest `Rectify11Installer.exe`.
+  </Step>
+
+  <Step title="Run as administrator">
+    Right-click `Rectify11Installer.exe` and choose **Run as administrator**. The installer will not proceed without administrator privileges.
+
+    If Rectify11 is already installed, the welcome screen offers **Modify** (change installed components) or **Update** (re-run installation to refresh files against the current Windows build) instead of a plain install option.
+  </Step>
+
+  <Step title="Accept the EULA">
+    Read and accept the end-user licence agreement to continue.
+  </Step>
+
+  <Step title="Choose components">
+    Select the components you want to install. Three top-level groups are available:
+
+    | Component | Description |
+    |-----------|-------------|
+    | **Icons** | Patches legacy system icons. Two sub-groups: *Basic* (`.mun` resource files in SystemResources) and *Advanced* (files in System32 and language packs). |
+    | **Themes** | Installs Rectify11 msstyles, a UxTheme patcher, custom cursors, and MicaForEveryone. |
+    | **Extras** | Optional add-ons: context menu replacement, AccentColorizer, wallpapers, gadgets, user account avatars. |
+
+    You must select at least one item to proceed. For details on each area see [Themes](/features/themes), [Icons](/features/icons), and [Extras](/features/extras).
+  </Step>
+
+  <Step title="Choose a theme (themes only)">
+    If you selected **Themes**, choose one of four variants:
+
+    | Theme | Description |
+    |-------|-------------|
+    | Light | Light msstyles (`lightrectified.theme`) |
+    | Dark | Dark msstyles (`darkrectified.theme`) |
+    | Black | Black msstyles (`black.theme`) |
+    | Partial dark | Dark taskbar and Start with light window chrome (`darkpartial.theme`) |
+
+    Two optional Mica settings are also available on this page:
+
+    - **Enable Mica effect** — applies Mica transparency to supported windows via MicaForEveryone.
+    - **Use Tabbed Mica instead** — available only on Windows 11 build 22530 and later; uses the Tabbed Mica variant.
+  </Step>
+
+  <Step title="Choose a context menu style (shell extras only)">
+    If you selected the shell/context menu extra, pick one of five styles:
+
+    | Option | Description |
+    |--------|-------------|
+    | Windows 11 default | Standard Windows 11 context menu, no replacement |
+    | Nilesoft Shell (small) | Nilesoft Shell with a compact item set |
+    | Nilesoft Shell (all) | Nilesoft Shell with the full item set |
+    | Classic menu | Classic Windows context menu style |
+    | Acrylic menu | Context menu with acrylic (frosted glass) background |
+  </Step>
+
+  <Step title="Review and confirm">
+    The confirmation page lists every component that will be installed or removed. A **Create restore point** checkbox is shown here — it is checked by default. Uncheck it only if you have recently created a restore point manually and want to skip this step.
+
+    Click **Install** to begin.
+  </Step>
+
+  <Step title="Installation runs">
+    The progress page shows the current stage. The full installation sequence is:
+
+    1. Prepare working directory at `C:\Windows\Rectify11`
+    2. Create system restore point (if enabled)
+    3. Install Visual C++ Runtime and .NET Core 3.1 silently
+    4. Extract `files.7z` payload
+    5. Install Rectify11 Control Center (`Rectify11CPL.dll`)
+    6. Install themes (UxTheme patcher, msstyles, cursors, MicaForEveryone)
+    7. Install extras (context menu, AccentColorizer, wallpapers, gadgets, avatars)
+    8. Patch icons via Phase 2 under TrustedInstaller context
+    9. Register uninstaller in **Add or remove programs**
+    10. Clean up temporary files
+
+    While the installer runs, it cycles through feature highlights on screen. Do not close the window.
+  </Step>
+
+  <Step title="Restart your PC">
+    When installation completes, the installer prompts you to restart. Click **Restart now** to apply all changes. Some icon patches and the theme patcher are only fully active after a reboot.
+  </Step>
+</Steps>
+
+<Tip>
+  The **Rectify11 Control Center** shortcut is placed on your desktop and in the Start menu automatically when themes or extras are installed. Use it to adjust Rectify11 settings without re-running the full installer.
+</Tip>
+
+## After installation
+
+<CardGroup cols={2}>
+  <Card title="Updating Rectify11" icon="arrow-up-circle" href="/guides/updating">
+    Learn how to update Rectify11 when a new version is released or after a Windows Update.
+  </Card>
+  <Card title="Uninstalling Rectify11" icon="trash" href="/guides/uninstalling">
+    Remove Rectify11 and restore the original system files.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Fix common issues such as failed theme application or missing icons.
+  </Card>
+  <Card title="Features overview" icon="wand-magic-sparkles" href="/features/themes">
+    Explore what each installed component does in detail.
+  </Card>
+</CardGroup>

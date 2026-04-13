@@ -1,0 +1,77 @@
+---
+title: "Rectify11 extras: optional Windows 11 enhancements"
+description: "Opt-in extras including Nilesoft Shell context menus, AccentColorizer, Windows Gadgets via GadgetPack, extra wallpapers, and custom user account avatars."
+---
+
+Extras are fully optional components you can choose to install or skip during setup. They are independent of icon patching and themes, and most can be uninstalled individually without removing the rest of Rectify11. Each extra is packaged inside `extras.7z` and extracted only when selected.
+
+<Tip>
+  You can uninstall individual extras at any time by running the Rectify11 installer and choosing to remove only the extras you want. You do not need to uninstall all of Rectify11 to remove a single component.
+</Tip>
+
+<Note>
+  The enhanced context menu and AccentColorizer take effect immediately if a system restart is not already pending from another component (such as icon patching or themes). All other extras are available as soon as installation completes, with or without a restart.
+</Note>
+
+## Enhanced context menu (Nilesoft Shell)
+
+Nilesoft Shell replaces the Windows context menu with a styled alternative. Rectify11 installs it to `C:\Windows\nilesoft\` and selects one of four menu styles during setup:
+
+<AccordionGroup>
+  <Accordion title="NilesoftSmall">
+    A compact Nilesoft Shell menu that shows a reduced set of actions. Suited for users who want a cleaner, less cluttered right-click menu.
+  </Accordion>
+  <Accordion title="NilesoftShellAll">
+    The full Nilesoft Shell menu with all available actions visible. This is the most feature-complete of the Nilesoft options.
+  </Accordion>
+  <Accordion title="ClassicMenu">
+    Restores a classic-style context menu layout using Nilesoft Shell as the host. Provides a familiar look while still benefiting from Nilesoft's rendering.
+  </Accordion>
+  <Accordion title="AcrylicMenu">
+    Adds an acrylic (frosted glass) background to the context menu. This style requires the Acrylic Menus Loader, which is started via a shortcut in the Common Startup folder (`acrylmenu.lnk`). The loader is launched immediately after installation if no restart is pending.
+  </Accordion>
+</AccordionGroup>
+
+If a system restart is not required by any other component, the installer kills and restarts Explorer immediately after Nilesoft Shell is installed so the new menu takes effect without rebooting. On uninstall, the Win11 context menu is restored by deleting the `HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}` registry key, Explorer is restarted, and `C:\Windows\nilesoft\` is removed.
+
+## AccentColorizer
+
+AccentColorizer provides dynamic system-wide accent color support. Two executables are installed:
+
+- **`AccentColorizer.exe`** — handles accent color propagation for most shell surfaces
+- **`AccentColorizerEleven.exe`** — extends accent color support to Windows 11-specific UI elements
+
+Both executables are placed in `C:\Windows\Rectify11\extras\AccentColorizer\` and added to the Common Startup folder as `Accentcolorizer.lnk` and `Accentcolorizer11.lnk` respectively. If no restart is pending, both processes are launched immediately after installation.
+
+On uninstall, both processes are killed, the scheduled task (`asdf`) is deleted, all four possible startup shortcut names are removed (`asdf.lnk`, `asdf11.lnk`, `Accentcolorizer.lnk`, `Accentcolorizer11.lnk`), and the AccentColorizer directory is deleted.
+
+## Windows Gadgets (GadgetPack)
+
+GadgetPack restores the Windows Sidebar and desktop gadgets. Installation:
+
+1. Extracts `Install.msi` from `extras.7z`
+2. Runs `msiexec.exe /i Install.msi /quiet /passive` to install the sidebar runtime
+3. Copies bundled gadget files to `%LocalAppData%\Microsoft\Windows Sidebar\Gadgets\`, creating the directory if it does not exist
+
+On uninstall, `msiexec.exe /X{A84C39EA-54FE-4CED-B464-97DA9201EB33} /qn` runs to remove the GadgetPack MSI package.
+
+## Extra wallpapers
+
+An additional set of wallpapers beyond those included with themes is copied to `C:\Windows\web\wallpaper\Rectified\`. The directory is created if it does not already exist. These wallpapers appear alongside the base theme wallpapers in the Windows personalization picker.
+
+On uninstall, only files that are not part of the base theme wallpaper set (`cosmic.png`, `img0.png`, `img19.png`, `metal.png`) are removed. If no files remain after the cleanup, the `Rectified` directory itself is deleted.
+
+## User avatars
+
+Custom profile pictures are installed to `%ProgramData%\Microsoft\User Account Pictures\Default Pictures\`. The directory is created if it does not exist, and the bundled avatar images are copied there. Windows surfaces these images in the account picture picker.
+
+On uninstall, the entire `Default Pictures` directory is removed.
+
+<CardGroup cols={2}>
+  <Card title="Themes" icon="paintbrush" href="/features/themes">
+    Learn about the four theme variants, UxTheme patcher, Mica effects, and the Control Panel extension.
+  </Card>
+  <Card title="Icon patching" icon="image" href="/features/icons">
+    Understand how Rectify11 replaces system icon resources using a two-phase install process.
+  </Card>
+</CardGroup>

@@ -1,0 +1,97 @@
+---
+title: "Rectify11 icon patching: modernize Windows UI icons"
+description: "Rectify11 patches system icon resources using ResourceHacker in a two-phase process that runs as TrustedInstaller to replace locked .mui and .mun files."
+---
+
+Rectify11 replaces hundreds of legacy icons spread across Windows system files. Because many of these files are in use or owned by TrustedInstaller, a single-pass replacement is not possible. The installer uses a two-phase approach: Phase 1 prepares patched copies of each file, and Phase 2 runs at elevated TrustedInstaller privilege to swap the files into their final locations with hard-link support.
+
+<Info>
+  Icon patching requires two distinct install phases. Phase 1 runs as the standard installer process; Phase 2 runs as TrustedInstaller via `NSudoL.exe`. Both must complete successfully for icons to take effect. A restart is required after Phase 2 for all changes to become visible.
+</Info>
+
+## Patch manifest
+
+Every icon replacement is defined in `rectify11.xml`, an embedded XML manifest. Each `<Patch>` entry carries:
+
+| Attribute | Purpose |
+|---|---|
+| `Mui` | Logical name used to identify the file in the installer UI |
+| `HardlinkTarget` | Expanded path to the system file being patched |
+| `mask` | ResourceHacker resource mask(s) specifying which resources to replace |
+| `x86` | Presence indicates a 32-bit (SysWOW64) counterpart also needs patching |
+| `MinVersion` / `MaxVersion` | Windows build range; patches outside this range are skipped |
+| `Ignore` | A mask to exclude when the build version condition is met |
+
+The installer reads the manifest at runtime, resolves path variables (`%sys32%`, `%sysresdir%`, `%lang%`, `%diag%`, and others), and builds the list of files to patch based on what the user selected.
+
+## Two categories of icons
+
+### Basic icons
+
+Basic icons live in `.mun` files under `C:\Windows\SystemResources`. These are resource-only binaries that Windows loads for shell icons independently of the main executable. Patching them does not require the MUI pipeline.
+
+### Advanced icons
+
+Advanced icons are embedded in `.mui` locale resource files alongside troubleshooter DLLs. `.mui` files are patched differently: ResourceHacker skips the initial delete pass and uses `addskip` directly, preserving the file's language-table structure.
+
+Troubleshooter icons are stored in `DiagPackage*.dll` files under `C:\Windows\diagnostics\system`. These are treated as a separate patch type with their own backup and temp subdirectories.
+
+## Phase 1: preparing patched files
+
+<Steps>
+  <Step title="File copied to temp">
+    The original system file is copied to `C:\Windows\Rectify11\Tmp\` (or `Tmp\Diag\` for troubleshooter files). The original at its system path is not touched yet.
+  </Step>
+  <Step title="ResourceHacker applies the patch">
+    `ResourceHacker.exe` runs against the temp copy using the `addskip` action, injecting the replacement icon resources from the `.res` file bundled in `C:\Windows\Rectify11\files\`. For non-MUI targets, a `delete` pass runs first to remove existing resources before adding the new ones.
+  </Step>
+  <Step title="Pending file list written to registry">
+    The list of patched files is written to `HKLM\SOFTWARE\Rectify11\PendingFiles` (and `x86PendingFiles` for 32-bit counterparts). Phase 2 reads this list to know which files to move into place.
+  </Step>
+</Steps>
+
+## Phase 2: replacing locked system files
+
+`Rectify11.Phase2.exe` is launched by `NSudoL.exe` with the `/install` flag under TrustedInstaller privilege (`-U:T -P:E`). Phase 2 reads the pending file lists from the registry and performs the actual replacement of system files, using hard links where supported.
+
+Original files are backed up to `C:\Windows\Rectify11\Backup\` before replacement. On uninstall, Phase 2 is invoked with `/uninstall` to restore the backed-up originals.
+
+<Warning>
+  Because Phase 2 modifies files in `C:\Windows\system32` and `C:\Windows\SystemResources`, some antivirus products may flag `Rectify11.Phase2.exe` or the patched output files as suspicious. Add `C:\Windows\Rectify11\` to your antivirus exclusions before installing if you encounter issues.
+</Warning>
+
+## Special cases
+
+### SSText3D.scr
+
+When the `SSText3D.scr` screensaver icon is selected, the installer imports `screensaver.reg` to update the registry entry that associates the screensaver file with its icon.
+
+### mmc.exe.mui
+
+When the MMC icon is selected, `MMCHelper.PatchAll()` runs an additional helper pass to handle MMC's DPI manifest. A `mmc.exe.manifest` file is also extracted and copied to `C:\Windows\system32\`, and the `PreferExternalManifest` registry value is set to ensure the manifest is picked up.
+
+### odbcad32.exe
+
+When the 32-bit ODBC Data Source Administrator icon is selected, `FixOdbc()` recreates the Administrative Tools shortcut for `odbcad32.exe` pointing to the correct icon resource in `odbcint.dll`, fixing a stale icon reference.
+
+### Font files
+
+Rectify11 installs two custom font files used by the shell icon layer:
+
+- **`marlett.ttf`** — replacement for the Windows Marlett symbol font used in window chrome controls
+- **`BackIcons.ttf`** — icon font used by the Rectify11 UI layer
+
+## Installed DLLs
+
+Regardless of which individual icons are selected, the following support DLLs are installed:
+
+| DLL | Location | Purpose |
+|---|---|---|
+| `duires.dll` | `system32` | Required when any icons or themes are installed; used by the Rectify11 Control Panel |
+| `iconres.dll` | `system32` | Core icon resource library |
+| `ImmersiveFontHandler.dll` | `system32` | Handles immersive shell font rendering |
+| `twinuifonts.dll` | `system32` and `SysWOW64` | Font resources for the twinUI shell surface |
+
+## Icon cache
+
+At the end of Phase 1, Rectify11 deletes all `*.db` cache files from `%LocalAppData%\Microsoft\Windows\Explorer` and schedules `ie4uinit.exe -show` to run on the next boot via `RunOnce`, forcing Windows to rebuild the icon cache from the patched files.

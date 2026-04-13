@@ -1,0 +1,258 @@
+---
+title: "Rectify11 installer: solution architecture overview"
+description: "The four solution projects, key classes in Rectify11Installer.Core, the two-phase TrustedInstaller install pattern, and the rectify11.xml patch manifest format."
+---
+
+The Rectify11 installer is built as a multi-project Visual Studio solution (`Rectify11Installer.sln`). Understanding how the projects relate to each other, and how the two-phase installation pattern works, is essential before making changes to the codebase.
+
+## Solution structure
+
+The solution contains four projects. Three are active; one is a placeholder.
+
+<CardGroup cols={2}>
+  <Card title="Rectify11Installer" icon="window" href="/contributing/architecture">
+    **C# WinForms.** The main installer UI and orchestration layer. Presents the wizard, collects user choices, and drives the installation.
+  </Card>
+  <Card title="Rectify11.Phase2" icon="shield" href="/contributing/architecture">
+    **C# console app.** Runs as TrustedInstaller via NSudoL to perform privileged file replacement that the main process cannot do directly.
+  </Card>
+  <Card title="RectifyStart" icon="play" href="/contributing/architecture">
+    **C++ native (Win32/DirectUI).** A startup helper registered to run on first login after install. Applies the selected Rectify11 theme once the UxTheme patcher is active.
+  </Card>
+  <Card title="RectifyControlPanel2" icon="settings" href="/contributing/architecture">
+    **C++ native.** Contains the DirectUI library (`dui70`) and the `Rectify11CPL` Control Panel extension DLL used by both `RectifyStart` and the installer.
+  </Card>
+</CardGroup>
+
+## Key namespaces and classes
+
+### `Rectify11Installer.Core`
+
+This namespace holds all backend logic. The classes below are in `Rectify11Installer/Core/`.
+
+<AccordionGroup>
+  <Accordion title="Installer">
+    `Installer.Install(FrmWizard frm)` orchestrates the full installation sequence:
+
+    1. Creates `C:\Windows\Rectify11\` and writes embedded resources to disk.
+    2. Optionally creates a Windows system restore point.
+    3. Installs required runtimes (Visual C++ Redistributable, .NET Core 3.1).
+    4. Extracts `files.7z` to `C:\Windows\Rectify11\files\`.
+    5. Installs the Rectify11 Control Panel extension (`Themes.InstallR11Cpl()`).
+    6. Calls `Themes.Install()`, `Extras.Install()`, and `Icons.Install()` depending on user selections.
+    7. Registers `RectifyStart.exe` in `HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run`.
+    8. Creates the uninstall entry and commits the installation log.
+  </Accordion>
+
+  <Accordion title="Uninstaller">
+    `Uninstaller.Uninstall(FrmWizard frm)` iterates over the user's uninstall selections and calls `Icons.Uninstall()`, `Themes.Uninstall()`, and `Extras.Uninstall()` as needed. On a complete uninstall it removes all files under `C:\Windows\Rectify11\` and deletes the `HKLM\SOFTWARE\Rectify11` and `Uninstall` registry keys.
+  </Accordion>
+
+  <Accordion title="Themes">
+    `Themes.Install()` handles all theme-related installation:
+
+    - Extracts `themes.7z` and copies wallpapers to `C:\Windows\web\wallpaper\Rectified\`.
+    - Copies and installs `ThemeTool.exe` (UxTheme patcher) via `RectifyThemeUtil.Utility.InstallThemeTool()`.
+    - Imports theme `.reg` files, copies cursor directories to `C:\Windows\cursors\`, and copies `.theme` and msstyle directories to `C:\Windows\Resources\Themes\`.
+    - Installs MicaForEveryone to `C:\Windows\MicaForEveryone\` and schedules it as a task.
+    - Calls `ApplyScheme()` which runs the chosen `.theme` file and sets `ApplyThemeOnNextRun` in the registry so `RectifyStart` can apply the visual style on the next boot.
+
+    `Themes.Uninstall()` reverses all of the above, reverts to the default Windows theme, and removes the Control Panel extension.
+  </Accordion>
+
+  <Accordion title="Icons">
+    `Icons.Install(FrmWizard frm)` patches system icon resources:
+
+    1. Reads the embedded `rectify11.xml` patch manifest via `PatchesParser.GetAll()`.
+    2. For each selected icon file, calls `MatchAndApplyRule()` which copies the target file to `C:\Windows\Rectify11\Tmp\` and applies resource patches using `ResourceHacker.exe`.
+    3. Writes the list of patched files to `HKLM\SOFTWARE\Rectify11\PendingFiles` (and `x86PendingFiles` for 32-bit variants).
+    4. Launches Phase 2 via `Helper.RunAsTI()` to move the patched files to their final destinations.
+    5. Clears the icon cache and sets `RestartRequired`.
+
+    `Icons.Uninstall()` writes `UninstallFiles` to the registry and runs Phase 2 with `/uninstall` to restore backups.
+  </Accordion>
+
+  <Accordion title="Extras">
+    `Extras.Install(FrmWizard frm)` handles optional components:
+
+    - **Wallpapers** — copies image files from `extras.7z` to `C:\Windows\web\wallpaper\Rectified\`.
+    - **AccentColorizer** — extracts to `C:\Windows\Rectify11\extras\AccentColorizer\` and creates startup shortcuts.
+    - **GadgetPack** — installs via MSI and copies gadget files to `%LocalAppData%\Microsoft\Windows Sidebar\Gadgets\`.
+    - **Nilesoft Shell** — extracts and moves to `C:\Windows\nilesoft\`, then calls `RectifyThemeUtil.Utility.SetCurrentMenuByIndex()` to configure the menu style.
+    - **User avatars** — copies images to `%ProgramData%\Microsoft\User Account Pictures\Default Pictures\`.
+  </Accordion>
+
+  <Accordion title="Helper">
+    `Helper` provides utility methods used throughout the backend:
+
+    - `SvExtract()` — runs `7za.exe` to extract `.7z` archives.
+    - `RunAsTI()` — launches a process as TrustedInstaller using `NSudoL.exe -U:T -P:E -Wait`.
+    - `SafeFileOperation()` / `SafeFileDeletion()` / `SafeDirectoryDeletion()` — file operations with fallback to `MoveFileEx` + `MOVEFILE_DELAY_UNTIL_REBOOT` when a file is locked.
+    - `ImportReg()` — imports `.reg` files via `reg.exe import`.
+    - `FixString()` — resolves path variables such as `%sys32%`, `%sysresdir%`, `%lang%`, `%diag%`, `%branding%`, `%prog%`, and `%windir%` to their runtime values.
+  </Accordion>
+
+  <Accordion title="Variables">
+    `Variables` exposes static path properties computed at runtime from environment APIs:
+
+    | Property | Resolved path |
+    | --- | --- |
+    | `r11Folder` | `C:\Windows\Rectify11` |
+    | `r11Files` | `C:\Windows\Rectify11\files` |
+    | `sys32Folder` | `C:\Windows\System32` |
+    | `sysWOWFolder` | `C:\Windows\SysWOW64` |
+    | `sysresdir` | `C:\Windows\SystemResources` |
+    | `diag` | `C:\Windows\diagnostics\system` |
+    | `BrandingFolder` | `C:\Windows\Branding` |
+    | `winSxS` | `C:\Windows\WinSxS` |
+
+    It also holds boolean install-state flags such as `isInstall`, `IsUninstall`, `RestartRequired`, `Phase2Skip`, `WindowsUpdate`, and `CreateRestorePoint`.
+  </Accordion>
+
+  <Accordion title="Logger">
+    `Logger` is a simple in-memory log writer. `WriteLine()` and `Warn()` append to an internal string. `CommitLog()` writes the accumulated text to `C:\Windows\Rectify11\installer.log` at the end of the install or uninstall run.
+  </Accordion>
+
+  <Accordion title="InstallOptions / UninstallOptions">
+    `InstallOptions` holds static flags and lists that record what the user selected during the wizard:
+
+    - Boolean flags: `InstallThemes`, `InstallExtras()`, `InstallWallpaper`, `InstallGadgets`, `InstallShell`, `InstallASDF`, `userAvatars`, `EnableMicaEffect`, `UseTabbedInsteadOfMica`, theme variant flags.
+    - `iconsList` — list of icon file names selected by the user.
+    - `MenuStyle` — one of `Windows11Default`, `NilesoftSmall`, `NilesoftShellAll`, `ClassicMenu`, `AcrylicMenu`.
+
+    `UninstallOptions` holds equivalent lists (`uninstIconsList`, `uninstExtrasList`) for uninstall selections.
+  </Accordion>
+
+  <Accordion title="PatchesParser">
+    `PatchesParser.GetAll()` deserializes the embedded `rectify11.xml` resource into a `Patches` object containing an array of `PatchesPatch` elements. Each `PatchesPatch` describes one patchable system file. See the patch manifest section below for the XML structure.
+  </Accordion>
+</AccordionGroup>
+
+### `Rectify11Installer.Pages`
+
+The `Pages/` directory contains `WizardPage`-derived WinForms user controls that make up the installer wizard:
+
+| Class | Purpose |
+| --- | --- |
+| `WelcomePage` | Opening screen with version information |
+| `EulaPage` | License agreement display |
+| `InstallOptnsPage` | Icon and extras selection tree |
+| `ThemeChoicePage` | Theme variant and Mica options |
+| `CMenuPage` | Context menu style selection |
+| `InstallConfirmation` | Summary of selected components |
+| `ProgressPage` | Live progress display during install/uninstall |
+| `DebugPage` | Diagnostic information |
+| `DefenderPage` | Windows Defender exclusion prompt |
+
+Navigation between pages is coordinated by `NavigationHelper` and the `RectifyPages` singleton registry, both defined in `Core/Helpers.cs`.
+
+## Two-phase installation pattern
+
+Installing icon patches requires replacing files owned by the Windows Modules Installer (TrustedInstaller). The Rectify11 installer handles this through a deliberate two-phase approach.
+
+### Phase 1 — `Rectify11Installer.exe`
+
+1. Extracts all resource files and tools to `C:\Windows\Rectify11\`.
+2. For each selected icon file, copies the original system file to `C:\Windows\Rectify11\Tmp\` and runs `ResourceHacker.exe` to apply the patched resources in place.
+3. Writes the list of patched file paths to `HKLM\SOFTWARE\Rectify11\PendingFiles` (and `x86PendingFiles` for 32-bit counterparts).
+4. Calls `Helper.RunAsTI()` to launch Phase 2.
+
+### Phase 2 — `Rectify11.Phase2.exe /install`
+
+Phase 2 runs as **TrustedInstaller** (elevated via `NSudoL.exe -U:T -P:E -Wait`). It:
+
+1. Reads `PendingFiles` and `x86PendingFiles` from the registry.
+2. Moves each patched file from `C:\Windows\Rectify11\Tmp\` to its final destination (e.g., `System32`, `SystemResources`, language subdirectories).
+3. Handles `.msc` files separately, backing up originals and copying patched versions into both `System32` and language folders.
+4. Installs helper DLLs (`duires.dll`, `iconres.dll`, `ImmersiveFontHandler.dll`, `twinuifonts.dll`) and custom fonts (`marlett.ttf`, `BackIcons.ttf`).
+5. Deletes `C:\Windows\Rectify11\Tmp\` when complete.
+
+Uninstall runs the same binary with `/uninstall`, reading `UninstallFiles` from the registry and restoring files from `C:\Windows\Rectify11\Backup\`.
+
+## Patch manifest (`rectify11.xml`)
+
+Icon patches are declared in an embedded XML manifest. `PatchesParser` deserializes it into `PatchesPatch` objects. Each element describes one patchable file:
+
+```xml
+<Patches>
+  <!-- Patch a .mui resource file in System32\en-US -->
+  <Patch
+    Mui="imageres.dll.mui"
+    mask="ICON,14392,1033|ICON,14395,1033"
+    HardlinkTarget="%lang%\imageres.dll.mui"
+  />
+
+  <!-- Patch a general binary, with a 32-bit (x86) counterpart -->
+  <Patch
+    Mui="shell32.dll"
+    mask="ICON,1,0|ICON,2,0|ICON,4,0"
+    HardlinkTarget="%sys32%\shell32.dll"
+    x86="true"
+  />
+
+  <!-- Patch only on builds between 22000 and 22620 -->
+  <Patch
+    Mui="explorer.exe"
+    mask="ICON,1,0"
+    HardlinkTarget="%sys32%\explorer.exe"
+    MinVersion="22000"
+    MaxVersion="22620"
+  />
+
+  <!-- Patch a diagnostics troubleshooter DLL -->
+  <Patch
+    Mui="Troubleshooter: Windows Update"
+    mask="PNG,1,0"
+    HardlinkTarget="%diag%\WindowsUpdate\DiagPackage.dll"
+  />
+
+  <!-- Skip a specific resource ID on certain builds -->
+  <Patch
+    Mui="imagesp1.dll"
+    mask="ICON,100,0|ICON,101,0"
+    HardlinkTarget="%sysresdir%\imagesp1.dll.mun"
+    Ignore="ICON,101,0"
+    MinVersion="22621"
+  />
+</Patches>
+```
+
+### Attribute reference
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `Mui` | Yes | Display name / file name used to match user selections and name the temporary file. |
+| `mask` | Yes | Pipe-delimited list of `TYPE,NAME,LANG` resource IDs passed to ResourceHacker. |
+| `HardlinkTarget` | Yes | Destination path using variable placeholders (`%sys32%`, `%sysresdir%`, `%lang%`, `%diag%`, `%branding%`, `%prog%`, `%windir%`). |
+| `x86` | No | When set, also patches the 32-bit counterpart of the file in `SysWOW64`. |
+| `MinVersion` | No | Only apply the patch on Windows builds **at or above** this build number. |
+| `MaxVersion` | No | Only apply the patch on Windows builds **at or below** this build number. |
+| `Ignore` | No | A resource ID from `mask` to skip when `MinVersion` or `MaxVersion` conditions are met. |
+| `DisableOnSafeMode` | No | Skip this patch when Windows is running in Safe Mode. |
+
+## Key file locations
+
+| Path | Purpose |
+| --- | --- |
+| `C:\Windows\Rectify11\` | Root Rectify11 directory |
+| `C:\Windows\Rectify11\files\` | Extracted resource files and helper executables |
+| `C:\Windows\Rectify11\Tmp\` | Temporary patched files awaiting Phase 2 |
+| `C:\Windows\Rectify11\Backup\` | Original file backups used for uninstall |
+| `C:\Windows\Rectify11\installer.log` | Full installation log committed at the end of each run |
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Contributing overview" icon="git-pull-request" href="/contributing/overview">
+    Guidelines, build prerequisites, and the pull request process.
+  </Card>
+  <Card title="Features: icons" icon="image" href="/features/icons">
+    User-facing documentation for the icon patching feature.
+  </Card>
+  <Card title="Features: themes" icon="palette" href="/features/themes">
+    User-facing documentation for the themes feature.
+  </Card>
+  <Card title="Features: extras" icon="package" href="/features/extras">
+    User-facing documentation for optional extras.
+  </Card>
+</CardGroup>

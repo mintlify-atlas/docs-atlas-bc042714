@@ -1,0 +1,58 @@
+---
+title: "Rectify11 system requirements and install prerequisites"
+description: "Minimum Windows 11 build, administrator privileges, runtime dependencies, and antivirus exclusions required before installing Rectify11."
+---
+
+Before running the Rectify11 installer, verify that your system meets the requirements below. The installer performs its own compatibility checks and will block installation if a requirement is not satisfied.
+
+## Windows version
+
+Rectify11 supports Windows 11 only. The minimum supported build is **22000** (the original Windows 11 release). Windows 10 and earlier are not supported.
+
+| Windows 11 build | Notes |
+|-----------------|-------|
+| 22000 | Minimum supported build. All core features available. |
+| 22530+ | Enables the **Tabbed Mica** option in the theme chooser (`ThemeChoicePage`). |
+| 22543+ | Installer selects updated (non-Legacy) msstyle files for a more complete theme. |
+
+<Info>
+  The installer checks for very early Windows 11 builds with a low Update Build Revision (UBR). Specifically, build 22000 with a UBR below 51, or builds between 21996 and 21999, will trigger a compatibility warning. Apply all pending Windows Updates before installing.
+</Info>
+
+## Pending updates and reboots
+
+The installer checks the Windows Update and Component Based Servicing registry keys for pending reboots. If a restart is outstanding — for example after a recent Windows Update — installation is blocked until you restart your PC and confirm the update is fully applied.
+
+## Administrator privileges
+
+The installer must be run as **Administrator**. Phase 2 of the installation additionally requires the **TrustedInstaller** security context (handled automatically via NSudo) to patch protected system files in `System32` and `SystemResources`.
+
+## Runtime dependencies
+
+The following runtimes are downloaded and installed automatically during setup if not already present:
+
+| Runtime | Used by |
+|---------|---------|
+| Visual C++ Redistributable (x64) | MicaForEveryone, AccentColorizer |
+| .NET Core 3.1 Desktop Runtime | MicaForEveryone |
+
+Both runtimes are bundled inside `extras.7z` and installed silently. If either runtime fails to install, the installer shows a warning with a manual download link and continues.
+
+<Note>
+  An internet connection is not strictly required if both runtimes are already installed on the target system. However, it is recommended to have one available in case the bundled installer triggers an online update.
+</Note>
+
+## Antivirus software
+
+Rectify11 writes files to `C:\Windows\Rectify11` and patches protected system resources using TrustedInstaller-level access. Some antivirus products flag these operations as suspicious. If the UxTheme patcher component (`ThemeTool.exe`) is quarantined during installation, themes will fail to install.
+
+<Warning>
+  Add `C:\Windows\Rectify11` as an exclusion in your antivirus software before running the installer. If the installer fails with a message about a missing file, check your antivirus quarantine.
+</Warning>
+
+## Summary checklist
+
+- Windows 11 build 22000 or later
+- All pending Windows Updates applied, no restart pending
+- Running the installer as Administrator
+- `C:\Windows\Rectify11` excluded from antivirus real-time scanning

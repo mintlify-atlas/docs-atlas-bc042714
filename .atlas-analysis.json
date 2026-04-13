@@ -1,0 +1,80 @@
+{
+  "projectType": "general",
+  "projectName": "Rectify11",
+  "projectDescription": "A Windows 11 modification tool that improves UI consistency by patching system icons, installing custom themes, and adding optional enhancements like an enhanced context menu and accent colorizer.",
+  "theme": "almond",
+  "primaryColor": "#47aff4",
+  "lightColor": "#f5b060",
+  "darkColor": "#9e9d91",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "system-requirements",
+              "installation"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/themes",
+              "features/icons",
+              "features/extras"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/updating",
+              "guides/uninstalling",
+              "guides/troubleshooting"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/architecture"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Custom Windows 11 themes (light, dark, black, partial-dark) with UxTheme patcher",
+    "System icon patching for hundreds of Windows UI elements",
+    "Mica For Everyone integration for translucent window effects",
+    "Enhanced context menu via Nilesoft Shell (multiple styles)",
+    "AccentColorizer for dynamic accent color support",
+    "Windows Gadgets revival via GadgetPack",
+    "Custom wallpapers and user account avatars",
+    "Two-phase installation using TrustedInstaller privileges",
+    "Automatic system restore point creation before installation",
+    "Full uninstaller with backup/restore of original files",
+    "Multi-language support (23 languages)",
+    "Rectify11 Control Panel for post-install management"
+  ],
+  "publicApiSurface": [
+    "Installer.Install(FrmWizard frm)",
+    "Uninstaller.Uninstall(FrmWizard frm)",
+    "Themes.Install()",
+    "Themes.Uninstall()",
+    "Icons.Install(FrmWizard frm)",
+    "Icons.Uninstall()",
+    "Extras.Install(FrmWizard frm)",
+    "Extras.Uninstall()",
+    "PatchesParser.GetAll()",
+    "InstallOptions (configuration class)",
+    "UninstallOptions (configuration class)",
+    "Variables (static paths and flags)",
+    "Logger.WriteLine() / Logger.CommitLog()",
+    "Helper.RunAsTI(string file, string param)",
+    "Rectify11.Phase2.exe /install | /uninstall"
+  ]
+}

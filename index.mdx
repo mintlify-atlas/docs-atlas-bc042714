@@ -1,97 +1,48 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Rectify11: restore visual consistency to Windows 11"
+description: "Rectify11 improves the visual consistency of Windows 11 by patching system icons, installing polished themes, and adding optional UI enhancements."
 ---
 
-## Setting up
+Rectify11 is a free, open-source Windows 11 modification that restores visual consistency across the operating system. It patches hundreds of legacy system icons, applies custom themes with a UxTheme patcher, and offers optional extras like an enhanced context menu, accent colorizer, and Mica effects — all through a guided installer with a full uninstaller and automatic restore point.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download and install Rectify11 on your Windows 11 PC in a few steps.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="System requirements" icon="computer" href="/system-requirements">
+    Check the Windows build and hardware requirements before installing.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Themes" icon="palette" href="/features/themes">
+    Apply light, dark, black, or partial-dark themes with Mica effects.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Icons" icon="icons" href="/features/icons">
+    Patch hundreds of legacy Windows icons for a consistent look.
   </Card>
-</Columns>
+  <Card title="Extras" icon="wand-magic-sparkles" href="/features/extras">
+    Enhanced context menus, accent colorizer, gadgets, and more.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Resolve common issues after installation.
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## Get up and running
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Check requirements">
+    Confirm you are running Windows 11 build 22000 or later and have administrator access. See [system requirements](/system-requirements).
+  </Step>
+  <Step title="Download the installer">
+    Grab the latest release from [GitHub](https://github.com/Rectify11/Installer/releases) and run `Rectify11Installer.exe` as administrator.
+  </Step>
+  <Step title="Choose your components">
+    Select themes, icons, and extras in the installer wizard. A system restore point is created automatically before any changes are made.
+  </Step>
+  <Step title="Restart your PC">
+    After installation completes, restart Windows for all changes to take effect.
+  </Step>
+</Steps>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Note>
+  Rectify11 V3 is no longer recommended. The team is working on V4, which uses a completely new approach. This documentation covers the V3 installer.
+</Note>

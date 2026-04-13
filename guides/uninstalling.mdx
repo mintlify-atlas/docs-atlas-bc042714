@@ -1,0 +1,78 @@
+---
+title: "How to fully uninstall Rectify11 from Windows 11 PCs"
+description: "Remove Rectify11 themes, icons, and extras selectively or completely, and understand what files and registry keys are cleaned up for each component."
+---
+
+Rectify11 supports selective removal of individual components — you can uninstall icons, themes, and extras independently, or remove everything at once. After uninstalling components that patch system files, a restart is required to complete the process.
+
+## Uninstall methods
+
+### Via the installer
+
+<Steps>
+  <Step title="Run the installer">
+    Launch `Rectify11Installer.exe`. If Rectify11 is installed, the welcome screen shows an **Uninstall** button.
+  </Step>
+  <Step title="Select components to remove">
+    On the component selection screen, choose which components to uninstall: icons, themes, and extras can each be removed independently.
+  </Step>
+  <Step title="Apply and restart">
+    Click **Apply**. The installer removes the selected components. If icons or themes were removed, a restart prompt will appear. Restart to complete the uninstall.
+  </Step>
+</Steps>
+
+### Via Windows Settings
+
+Rectify11 registers itself as a standard Windows application. You can uninstall it from **Settings > Apps > Installed apps**, find **Rectify11**, and select **Uninstall**. This launches the registered uninstaller and removes all installed components.
+
+## What each component removes
+
+<AccordionGroup>
+  <Accordion title="Icons">
+    Uninstalling icons runs Phase 2 (`Rectify11.Phase2.exe /uninstall`) to restore the original backed-up system files. After Phase 2 completes, the following DLLs are removed from both `System32` and `SysWOW64`:
+
+    - `iconres.dll`
+    - `duires.dll`
+    - `ImmersiveFontHandler.dll`
+    - `twinuifonts.dll`
+
+    A restart is required after icon removal.
+  </Accordion>
+  <Accordion title="Themes">
+    Uninstalling themes performs the following actions:
+
+    - Reverts to the stock Windows theme (dark or light, matching your current mode setting)
+    - Removes the Rectify11 theme wallpapers from `%windir%\web\wallpaper\Rectified`
+    - Removes `.theme` files (`black.theme`, `darkcolorized.theme`, `darkrectified.theme`, `lightrectified.theme`, `darkpartial.theme`) from `%windir%\Resources\Themes`
+    - Removes the `Rectified` msstyles directory from `%windir%\Resources\Themes\Rectified`
+    - Removes cursor directories matching `WindowsRectified*` from `%windir%\cursors`
+    - Uninstalls MicaForEveryone and removes the `%windir%\MicaForEveryone` directory
+    - Stops and removes the Rectify11 tray tool
+    - Restores registry font substitutes (`MS Shell Dlg 2` → `Tahoma`, `MS Shell Dlg` → `Microsoft Sans Serif`)
+    - Restores default menu height and width metrics in `Control Panel\Desktop\WindowMetrics`
+    - Removes the Rectify11 Control Panel extension (unregisters `Rectify11CPL.dll` and removes shortcuts)
+
+    A restart is required after theme removal.
+  </Accordion>
+  <Accordion title="Extras">
+    Extras support per-item uninstall. Each extra is removed independently based on your selection:
+
+    - **Context menu (Nilesoft Shell)**: Runs `shell.exe -u` to unregister the shell extension, removes the `%windir%\nilesoft` folder, and restores the default Windows 11 context menu. If no restart is pending, Explorer is restarted automatically.
+    - **AccentColorizer**: Kills `AccentColorizer.exe` and `AccentColorizerEleven.exe`, removes startup shortcuts (`Accentcolorizer.lnk`, `Accentcolorizer11.lnk`), and deletes the `AccentColorizer` folder from the Rectify11 extras directory.
+    - **Gadgets**: Runs `msiexec.exe /X{A84C39EA-54FE-4CED-B464-97DA9201EB33} /qn` to uninstall the GadgetPack MSI.
+    - **Wallpapers**: Removes the `%windir%\web\wallpaper\Rectified` folder.
+    - **User avatars**: Removes the `Default Pictures` folder from `%ProgramData%\Microsoft\User Account Pictures`.
+  </Accordion>
+</AccordionGroup>
+
+## Complete uninstall
+
+When the **Complete Uninstall** option is selected, the uninstaller additionally:
+
+- Removes all files from `C:\Windows\Rectify11` and deletes the folder itself
+- Deletes the `SOFTWARE\Rectify11` registry key
+- Deletes the `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Rectify11` registry key
+
+<Note>
+  A restart is required after removing icons or themes. The installer will notify you when a restart is needed. Do not skip the restart — some files are scheduled for deletion on next boot and will not be fully removed until the system restarts.
+</Note>

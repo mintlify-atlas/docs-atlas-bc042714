@@ -1,0 +1,97 @@
+---
+title: "Troubleshoot common Rectify11 installation problems"
+description: "Solutions for common Rectify11 problems including antivirus blocks, pending Windows Updates, failed icon patches, and unsupported builds."
+---
+
+Most Rectify11 installation issues fall into a small set of known categories. Work through the relevant section below before seeking support. The installer writes a full log on every run — check it first for specific error messages.
+
+<AccordionGroup>
+  <Accordion title="Antivirus deleted or quarantined files">
+    Rectify11 stores its files in `C:\Windows\Rectify11`. Some antivirus products flag the tools in this folder (particularly `NSudoL.exe`, `ResourceHacker.exe`, and the UxTheme patcher `ThemeTool.exe`) as potentially unwanted programs.
+
+    If files have been removed:
+
+    1. Add `C:\Windows\Rectify11` as an exclusion in your antivirus software.
+    2. Re-run the installer to restore the missing files.
+
+    Theme installation will fail if the UxTheme patcher (`ThemeTool.exe`) cannot be executed. The installer logs the message `"SecureUXHelper is missing (most likely deleted by antivirus)"` when this happens — `SecureUXHelper` is the legacy name used in log messages. If theme installation fails with a UxTheme patcher error, check your antivirus quarantine and add the exclusion before retrying.
+  </Accordion>
+  <Accordion title="Installation fails with a pending reboot error">
+    The installer checks for pending reboots before proceeding. If either of the following registry keys exists, the installer will show a compatibility check failure and refuse to continue:
+
+    - `SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired`
+    - `SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending`
+
+    To resolve this:
+
+    1. Open **Windows Update** and install all available updates.
+    2. Restart your PC.
+    3. Re-run the Rectify11 installer.
+  </Accordion>
+  <Accordion title="Icons not changed after restart">
+    The installer clears the icon cache by deleting `*.db` files from `%LocalAppData%\Microsoft\Windows\Explorer` and schedules `ie4uinit.exe -show` to run via `RunOnce` on the next boot.
+
+    If icons have not updated after restarting:
+
+    1. Open a Command Prompt as administrator and run:
+       ```cmd
+       ie4uinit.exe -show
+       ```
+    2. If that does not help, manually delete icon cache files:
+       - Open `%LocalAppData%\Microsoft\Windows\Explorer` in File Explorer.
+       - Delete all files matching `*.db` (for example, `iconcache_*.db`, `thumbcache_*.db`).
+       - Restart your PC.
+  </Accordion>
+  <Accordion title="Theme not applied after restart">
+    The Rectify11 theme requires the UxTheme patcher to be active before the visual style can be applied. To work around a Windows limitation where running a `.theme` file only applies cursors and wallpaper (but not the visual style), the installer registers `RectifyStart.exe` to run on the next login. `RectifyStart.exe` reads the `ApplyThemeOnNextRun` value from `SOFTWARE\Rectify11` in the current user's registry and applies the correct theme once the patcher is confirmed to be running.
+
+    If the theme is not applied after restarting:
+
+    1. Verify that `RectifyStart.exe` is present in `C:\Windows\Rectify11`.
+    2. Check that `RectifyStart.exe` is listed under `SOFTWARE\Microsoft\Windows\CurrentVersion\Run` in the current user's registry hive.
+    3. If the file is missing, re-run the installer to restore it.
+  </Accordion>
+  <Accordion title="Windows build not supported">
+    Rectify11 requires Windows 11 build 22000 or later. Builds of Windows 10 and earlier are not supported.
+
+    Additionally, build 22000 requires Update Build Revision (UBR) 51 or higher. If your system is on build 22000 with a UBR below 51, install the latest cumulative update from Windows Update and restart before running the installer.
+
+    To check your current build and UBR, open a Command Prompt and run:
+
+    ```cmd
+    winver
+    ```
+
+    The OS build and revision are shown in the format `Build 22000.xxx`, where `xxx` is the UBR.
+  </Accordion>
+  <Accordion title="Context menu not working after install">
+    The Nilesoft Shell context menu extension requires Explorer to be restarted after installation. The installer automatically restarts Explorer if no system restart is required. If you chose a non-default menu style and the context menu is not functioning:
+
+    1. Open **Task Manager** (`Ctrl+Shift+Esc`).
+    2. Find **Windows Explorer** in the Processes list.
+    3. Right-click it and select **Restart**.
+
+    If you are performing a full system restart anyway (for example, after installing icons), Explorer will pick up the new context menu configuration on the next boot.
+  </Accordion>
+  <Accordion title="How to find the installation log">
+    The installer writes a detailed log to:
+
+    ```
+    C:\Windows\Rectify11\installer.log
+    ```
+
+    The log includes the Rectify11 version, timestamp, and output from every installation step, including any warnings or errors. Review this file first when diagnosing a failed installation before asking for support.
+  </Accordion>
+  <Accordion title="Getting support">
+    If the steps above do not resolve your issue, you can get help through the following channels:
+
+    - **Discord**: Join the Rectify11 community at [discord.gg/gsgu9GCtsk](https://discord.gg/gsgu9GCtsk) to ask questions and report issues directly to the team.
+    - **GitHub**: Browse the source code and existing discussions at the Rectify11 GitHub repository.
+
+    Note that the GitHub Issues tab was disabled as of March 22, 2025 for the V3 release. Use Discord for bug reports and support requests.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  For the fastest support, share the contents of `C:\Windows\Rectify11\installer.log` when asking for help on [Discord](https://discord.gg/gsgu9GCtsk). The log gives the team the context needed to diagnose issues without back-and-forth.
+</Note>

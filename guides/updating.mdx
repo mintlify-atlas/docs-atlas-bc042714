@@ -1,0 +1,48 @@
+---
+title: "How to update Rectify11 after a new installer release"
+description: "How Rectify11 detects and applies updates after a Windows Update or new installer release, including registry detection and what happens during the update."
+---
+
+Rectify11 can be updated in place by re-running the installer. The installer automatically detects your current installation and switches to update mode — you do not need to uninstall first. There are two distinct scenarios that trigger an update: a new Rectify11 installer release, and a pending Windows Update that has changed your OS build or update revision.
+
+## Update scenarios
+
+### New Rectify11 installer release
+
+When you run a newer version of `Rectify11Installer.exe`, the installer reads the `Build` value from the registry key `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Rectify11`. If the stored build number is lower than the version of the installer you are running, the welcome screen shows an **Update** button instead of **Install**.
+
+### After a Windows Update
+
+After applying Windows Updates, your OS build number or Update Build Revision (UBR) may change. The installer reads the `OSVersion` value from `SOFTWARE\Rectify11` and compares it against your current OS version. If the current build or UBR is higher than what was recorded at install time, the installer sets an internal `WindowsUpdate` flag and prompts you to update. This re-applies icon patches and other components that depend on system files that may have changed.
+
+## How to update
+
+<Steps>
+  <Step title="Download the latest installer">
+    Obtain the latest `Rectify11Installer.exe` from the GitHub releases page.
+  </Step>
+  <Step title="Run the installer">
+    Launch the installer. If an existing installation is detected and an update is available, the welcome screen will show the **Update** button. Your previously selected components will be pre-selected.
+  </Step>
+  <Step title="Review and apply">
+    Confirm the component selections on the options screen. Click **Apply** to begin. The installer runs the same installation flow as a fresh install, respecting your existing selections.
+  </Step>
+  <Step title="Restart when prompted">
+    If a restart is required (for example, after icon patches are applied), the installer will prompt you. Restart to complete the update.
+  </Step>
+</Steps>
+
+## Before you update
+
+<Warning>
+  Pending reboots block installation. If your system has unapplied Windows Updates or a restart is pending, the installer will refuse to proceed. The installer checks two registry keys to detect this state:
+
+  - `SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired`
+  - `SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending`
+
+  Apply all pending Windows Updates and restart your PC before running the Rectify11 installer.
+</Warning>
+
+<Warning>
+  Windows 11 build 22000 requires Update Build Revision (UBR) 51 or higher. If your system is on build 22000 with a UBR below 51, the installer will not proceed. Install the latest cumulative update for build 22000 and restart before updating Rectify11.
+</Warning>

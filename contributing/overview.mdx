@@ -1,0 +1,73 @@
+---
+title: "How to contribute to the open-source Rectify11 project"
+description: "Fork the repo, build the .NET 8 WinForms solution in Visual Studio, follow the code style guidelines, and open a focused pull request for review."
+---
+
+Rectify11 is an open-source project licensed under the **GPL-3.0** license, and contributions from the community are welcome. Whether you are fixing a typo, improving a feature, or patching a bug, this page explains how to get involved, what the maintainers expect from pull requests, and how to report security issues responsibly.
+
+<Note>
+  The GitHub issues tab is disabled for V3 as of 3/22/25. For bug reports, questions, and community discussion, use the [Rectify11 Discord server](https://discord.gg/gsgu9GCtsk).
+</Note>
+
+## Guidelines
+
+The project has a short but firm set of contribution rules taken directly from `CONTRIBUTING.md`:
+
+- **Keep pull requests small and understandable** so they are easy to review. Avoid combining unrelated changes in a single PR.
+- **Follow the existing code style.** The installer is written in C# (WinForms) following standard .NET conventions. Match naming, indentation, and patterns already in the codebase.
+- **Ensure the installer works after your changes.** Build and run the full solution before submitting. A PR that breaks the installer will not be merged.
+
+The project also follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html). Harassment, personal attacks, and other disrespectful behavior are not tolerated in any community space.
+
+## Prerequisites
+
+Before building Rectify11 you need:
+
+- **Visual Studio 2022** (version 17.7 or later) with the **.NET desktop development** workload installed.
+- The **Desktop development with C++** workload for the native projects (`RectifyStart`).
+- **.NET 8 SDK** — the main installer (`Rectify11Installer`) targets `net8.0-windows` and publishes as a single-file x64 WinExe.
+
+## Contribution workflow
+
+<Steps>
+  <Step title="Fork the repository">
+    Fork the Rectify11 repository on GitHub to your own account, then clone it locally.
+  </Step>
+  <Step title="Open the solution">
+    Open `Rectify11Installer.sln` in Visual Studio 2022. The solution contains multiple projects; the main installer is `Rectify11Installer` (C# WinForms).
+  </Step>
+  <Step title="Make your changes">
+    Work on your changes in a dedicated branch. Follow the existing code style and keep the scope of changes focused.
+  </Step>
+  <Step title="Build and test">
+    Build the full solution (`Build → Build Solution`). Confirm that the installer launches, the wizard pages load correctly, and any changed functionality behaves as expected.
+  </Step>
+  <Step title="Open a pull request">
+    Push your branch to your fork and open a pull request against the main Rectify11 repository. Describe what the PR changes and why. Keep the PR small and targeted — one logical change per PR is strongly preferred.
+  </Step>
+</Steps>
+
+## Reporting security issues
+
+<Warning>
+  Do not open a GitHub issue to report a security vulnerability. The GitHub issues tab is disabled for V3 in any case.
+</Warning>
+
+Only version **3.2.x** is currently supported with security fixes. Versions below 3.1 are no longer supported.
+
+If you discover a vulnerability, contact a member of the Rectify11 team directly on Discord:
+
+[Join the Rectify11 Discord](https://discord.gg/gsgu9GCtsk)
+
+All vulnerability reports are reviewed and handled privately before any public disclosure.
+
+## Explore further
+
+<CardGroup cols={2}>
+  <Card title="Architecture overview" icon="layers" href="/contributing/architecture">
+    Understand the solution structure, project responsibilities, and the two-phase install pattern before making changes.
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    See what the installer does from a user perspective to better understand what you are contributing to.
+  </Card>
+</CardGroup>

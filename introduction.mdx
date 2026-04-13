@@ -1,0 +1,57 @@
+---
+title: "Rectify11: the Windows 11 visual consistency toolkit"
+description: "Rectify11 patches system icons, installs polished themes, and adds optional UI enhancements to make Windows 11 visually consistent across all shell surfaces."
+---
+
+Rectify11 improves the visual consistency of Windows 11 by modifying system files in a safe, reversible way. It patches hundreds of legacy system icons that Microsoft never updated for the Windows 11 design language, installs custom msstyles themes through a UxTheme patcher, and offers optional extras such as an enhanced context menu, accent colorizer, Mica effects, gadgets, and custom wallpapers — all delivered through a step-by-step graphical installer that creates a system restore point before making any changes.
+
+The project is licensed under GPL-3.0, fully open source, and has earned over 3,000 stars on GitHub.
+
+<Note>
+  Rectify11 V3 is the current stable release documented here. V4 is a complete rewrite using a different approach. The GitHub issues tab was disabled on 22 March 2025 in preparation for V4. It is not recommended to continue using V3 once V4 is available.
+</Note>
+
+## What Rectify11 modifies
+
+Rectify11 organises its changes into three main areas:
+
+<CardGroup cols={3}>
+  <Card title="Themes" icon="palette" href="/features/themes">
+    Installs light, dark, black, and partial-dark msstyles themes with optional Mica and Tabbed Mica effects via MicaForEveryone.
+  </Card>
+  <Card title="Icons" icon="icons" href="/features/icons">
+    Patches legacy system icons across System32, SystemResources, and language packs to match the Windows 11 icon style.
+  </Card>
+  <Card title="Extras" icon="wand-magic-sparkles" href="/features/extras">
+    Optional add-ons including enhanced context menus, accent colorizer, Windows gadgets, Rectified wallpapers, and custom user account avatars.
+  </Card>
+</CardGroup>
+
+## How it works
+
+The installer runs in two phases:
+
+1. **Phase 1** — The graphical wizard collects your component choices, creates a system restore point, installs the Visual C++ Runtime and .NET Core 3.1 runtimes, extracts the payload, applies themes and extras, and then hands off to Phase 2.
+2. **Phase 2** — Because Windows locks many system files, Rectify11 uses **NSudo** (`NSudoL.exe`) to re-launch `Rectify11.Phase2.exe` under the **TrustedInstaller** security context. This elevated context allows the installer to replace protected icon resources in `System32` and `SystemResources` that a normal administrator process cannot touch.
+
+A full uninstaller is registered in **Add or remove programs** and all patched files are backed up so the process can be reversed.
+
+## Rectify11 Control Panel
+
+When themes or extras are selected, the installer also deploys the **Rectify11 Control Center**, a Control Panel extension (registered as `Rectify11CPL.dll`) that lets you adjust Rectify11 settings after installation without re-running the installer.
+
+## Community and source code
+
+- **Discord**: [discord.gg/gsgu9GCtsk](https://discord.gg/gsgu9GCtsk) — report issues and get support from the Rectify11 team.
+- **GitHub**: [github.com/Rectify11/Installer](https://github.com/Rectify11/Installer) — source code, releases, and contribution guidelines.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="System requirements" icon="computer" href="/system-requirements">
+    Check the minimum Windows build and hardware requirements before downloading.
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Follow the step-by-step guide to download and run the installer.
+  </Card>
+</CardGroup>

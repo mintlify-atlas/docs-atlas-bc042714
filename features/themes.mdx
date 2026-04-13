@@ -1,0 +1,107 @@
+---
+title: "Rectify11 themes: four custom Windows 11 visual styles"
+description: "Four msstyle theme variants — Light, Dark, Black, and Partial Dark — with UxTheme patcher, Mica For Everyone, custom cursors, and Rectify11 Control Panel."
+---
+
+Rectify11 replaces the default Windows visual style with custom `.msstyle` files and a supporting set of assets: matched cursors, wallpapers, a Control Panel extension, and a background tray utility. Because Windows normally blocks third-party themes, the installer deploys a UxTheme patcher (`ThemeTool.exe`) that lets the custom styles load. All theme assets land in `C:\Windows\Resources\Themes\Rectified` and are removed cleanly on uninstall.
+
+## How themes are applied
+
+<Steps>
+  <Step title="UxTheme patcher installed">
+    `ThemeTool.exe` is copied to `C:\Windows\` and registered via `RectifyThemeUtil` to patch the Windows theme signing check. Without this step, Windows would silently reject any unsigned `.msstyle`.
+  </Step>
+  <Step title="Msstyles and theme files copied">
+    The `Rectified` msstyle directory and the four `.theme` descriptor files are placed under `C:\Windows\Resources\Themes`. On builds earlier than 22543, legacy variants of the msstyle directories are used instead.
+  </Step>
+  <Step title="Theme applied on next boot">
+    Because the UxTheme patcher must be running before the visual style can switch, Rectify11 schedules the final theme application through `RectifyStart.exe` on the next login rather than applying it immediately.
+  </Step>
+  <Step title="Tray tool registered">
+    `Rectify11TrayTool.exe` is written to `C:\Windows\Rectify11\` and starts automatically so the tray icon and per-session helpers are available after login.
+  </Step>
+</Steps>
+
+<Note>
+  Themes require a restart to fully apply. The visual style will not change until Windows boots with the UxTheme patcher active.
+</Note>
+
+## Theme variants
+
+<Tabs>
+  <Tab title="Light themes">
+    ### Light Rectified
+    **File:** `lightrectified.theme`
+
+    The default choice when Windows is in light mode. Provides a clean, light-colored visual style that matches the Rectify11 design language across all shell surfaces.
+
+    ### Partial Dark
+    **File:** `darkpartial.theme`
+
+    A mixed-mode theme where some shell elements use dark styling while others retain a lighter appearance. Suited for users who prefer the dark taskbar and Start menu but lighter window chrome.
+  </Tab>
+  <Tab title="Dark themes">
+    ### Dark Rectified
+    **File:** `darkrectified.theme`
+
+    The default choice when Windows is already in dark mode. Applies a consistent dark visual style across shell surfaces, matching the Rectify11 icon and window design.
+
+    ### Black
+    **File:** `black.theme`
+
+    A deeper dark variant that pairs a near-black color scheme with Mica effects. Intended for users who want maximum contrast between window content and the shell chrome.
+  </Tab>
+</Tabs>
+
+## Mica For Everyone
+
+Rectify11 bundles a pre-configured version of [Mica For Everyone](https://github.com/MicaForEveryone/MicaForEveryone) that applies translucent Mica backgrounds to Win32 application windows. The installer:
+
+- Moves the MFE directory to `C:\Windows\MicaForEveryone\`
+- Creates a scheduled task (`mfe`) from the bundled XML so MFE starts at login
+- Clears any previous user-level MFE configuration from `%LocalAppData%\Mica For Everyone`
+
+Two Mica options are available during installation:
+
+| Option | Requirement | Effect |
+|---|---|---|
+| Mica effect | Any supported build | Standard Mica backdrop on Win32 windows |
+| Tabbed Mica | Build 22530 or later | Uses the `Tabbed` Mica variant for a slightly different layered appearance |
+
+The Tabbed Mica option is disabled in the installer on builds below 22530.
+
+## Custom cursors
+
+Cursor sets are installed to `C:\Windows\cursors\`. Each set is a subdirectory following the naming scheme `WindowsRectified*`. The selected theme's `.theme` file references the appropriate cursor set. On uninstall, all `WindowsRectified*` directories are removed from the cursors folder.
+
+## Wallpapers
+
+A set of Rectify11 wallpapers is copied to `C:\Windows\web\wallpaper\Rectified\` during theme installation. The following files are treated as base wallpapers and are preserved during incremental updates:
+
+- `cosmic.png`
+- `img0.png`
+- `img19.png`
+- `metal.png`
+
+Any additional wallpapers from a previous installation that are not in this list are removed when themes are reinstalled or uninstalled.
+
+## Rectify11 Control Panel
+
+The Rectify11 Control Panel (`Rectify11CPL.dll`) is registered as a CPL extension using `regsvr32`, making it accessible from Windows Settings. Two shortcuts are created:
+
+- **Start menu:** `%ProgramData%\Microsoft\Windows\Start Menu\Programs\Rectify11 Control Center.lnk`
+- **Desktop:** `Rectify11 Control Center.lnk`
+
+The CPL launches via `control.exe /name Rectify11.SettingsCPL`. On uninstall, the DLL is unregistered and both shortcuts are deleted.
+
+## Uninstalling themes
+
+When themes are uninstalled, Rectify11:
+
+1. Switches back to the built-in `Windows (dark)` or `Windows (light)` theme depending on the current mode setting.
+2. Unregisters and removes `ThemeTool.exe`.
+3. Deletes all `WindowsRectified*` cursor directories.
+4. Removes the `Rectified` msstyle directory and all `.theme` files.
+5. Kills and removes Mica For Everyone along with its scheduled task.
+6. Removes the Control Panel extension and its shortcuts.
+7. Kills `Rectify11TrayTool.exe`.
